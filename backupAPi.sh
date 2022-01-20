@@ -1,17 +1,5 @@
 #!/bin/bash
 
-#===============================================================================
-# title           :backpAPi.sh
-# description     :This script will create a backup of your Raspberry Pi.
-# author          :Sergej Nalobin
-# date            :20 January 2022
-# version         :0.1    
-# usage           :bash backpAPi.sh
-# notes           :under construction, please be carefully
-# license         :GPL-3.0 License 
-#===============================================================================
-
-
 # install https://wiki.ubuntuusers.de/mount.cifs/
 # install cpulimit
 # cpulimit -l 50
@@ -25,7 +13,7 @@
 
 
 DD_BACKUP_SOURCE="/dev/mmcblk0"
-FS_BACKUP_SOURCE="/"
+FS_BACKUP_SOURCE="/root /boot"
 BACKUP_DESTINATION="/mnt/data/Backup/one.home.lab/"
 # retention in days +24h
 BACKUP_RETENTION_TIME="30"
@@ -66,14 +54,27 @@ FS_WRITE_BACKUP() {
         fi
 }
 
-DELETE_OLDER_BACKUPS() {
-
-	FILES_TO_DELETE$(/usr/bin/find $BACKUP_DESTINATION -mtime +$BACKUP_RETENTION_TIME)
+DELETE_OLD_BACKUPS() {
+        # einbauen dass letzte Sicherung immer stehen bleibt, dann muss zwischen DD und FS unterschieden werden
+	FILES_TO_DELETE=$(/usr/bin/find $BACKUP_DESTINATION -mtime +$BACKUP_RETENTION_TIME)
 	/usr/bin/logger -s "$FILES_TO_DELETE"
 	/usr/bin/find $BACKUP_DESTINATION -mtime +$BACKUP_RETENTION_TIME -delete
 
 }
 
-# DD_WRITE_BACKUP
-# FS_WRITE_BACKUP
-# DELETE_older_BACKUPS
+if [ $1 = "-h" ]
+then
+  echo "backupAPi.sh dd|fs"
+fi
+
+if [ $1 = "dd" ]
+then
+  DD_WRITE_BACKUP
+  DELETE_OLD_BACKUPS
+fi
+
+if [ $1 = "fs" ]
+then
+  FS_WRITE_BACKUP
+  DELETE_OLD_BACKUPS
+fi
